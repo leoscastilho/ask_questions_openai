@@ -37,18 +37,28 @@ def ask_chat_gpt_sync(model, context, question, max_tokens, temperature):
     # Construct the prompt by combining the context and question
     prompt = f"Context: {context}\nQuestion: {question}\nAnswer:"
 
-    # Generate a response from the ChatGPT model
-    response = openai.Completion.create(
-        engine=model,
-        prompt=prompt,
-        max_tokens=max_tokens,
-        temperature=temperature,
-        n=1,
-        stop=None
-    )
+    try:
+        # Generate a response from the ChatGPT model
+        response = openai.Completion.create(
+            engine=model,
+            prompt=prompt,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            n=1,
+            stop=None
+        )
 
-    # Cancel the timeout if the API call returns within the timeout duration
-    signal.alarm(0)
+    except openai.OpenAIError as error:
+        if error.status == 401:
+            _LOGGER.error("Invalid API key.")
+            return None
+        else:
+            _LOGGER.error("An error occurred while making the API request.")
+            return None
+
+    except Exception as e:
+        _LOGGER.error("An unexpected error occurred: %s", {str(e)})
+        return None
 
     # Extract and return the answer from the response
     answer = response.choices[0].text.strip()
@@ -106,31 +116,16 @@ class AskQuestionsOpenAISensor(SensorEntity):
                 964,
                 0.9
             )
+            _LOGGER.debug(response)
             self._output_response = response
-            self._state = "received"
+            if response is None:
+                self._state = "error"
+            else:
+                self._state = "received"
             self.async_write_ha_state()
-
-    def on_input_question_change(self):
-        _LOGGER.error("Detected state change")
-        if self._input_question:
-            self._state = "querying"
-            self._output_response = "Asking GPT..."
-            gpt_response = ask_chat_gpt_sync(
-                self._model,
-                self._input_context,
-                self._input_question,
-                964,
-                0.9
-            )
-            self._output_response = gpt_response["choices"][0]["text"]
-            self._state = "received"
-            self.async_write_ha_state()
-        else:
-            _LOGGER.error("Input is required to query GPT")
-            self._state = "error"
 
     async def async_added_to_hass(self):
-        _LOGGER.error("Added to hass")
+        _LOGGER.debug("Added to hass")
         async_track_state_change(
             self._hass, self.entity_id, self.async_ask_chat_gpt
         )
