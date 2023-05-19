@@ -30,8 +30,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     openai.api_key = api_key
 
     async_add_entities([AskQuestionsOpenAISensor(hass, name, model)], True)
-    _LOGGER.error("HERE1")
-
 
 def ask_chat_gpt_sync(model, context, question, max_tokens, temperature):
     # Construct the prompt by combining the context and question
@@ -106,7 +104,11 @@ class AskQuestionsOpenAISensor(SensorEntity):
                 "output_response": self._output_response}
 
     async def async_ask_chat_gpt(self, entity_id, old_state, new_state):
+        _LOGGER.debug("Old State: " + old_state)
+        _LOGGER.debug("New State: " + new_state)
+
         new_text = new_state.state
+        _LOGGER.debug("New Text: ", new_text)
         if new_text:
             response = await self._hass.async_add_executor_job(
                 ask_chat_gpt_sync,
@@ -125,7 +127,7 @@ class AskQuestionsOpenAISensor(SensorEntity):
             self.async_write_ha_state()
 
     async def async_added_to_hass(self):
-        _LOGGER.debug("Added to hass")
+        _LOGGER.debug("Added AskQuestionsOpenAI sensor to hass")
         async_track_state_change(
             self._hass, self.entity_id, self.async_ask_chat_gpt
         )
