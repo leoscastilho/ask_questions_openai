@@ -125,12 +125,12 @@ class AskQuestionsOpenAISensor(SensorEntity):
             self._state = "error"
 
 
-    async def async_added_to_hass(self):
-        self.async_on_remove(
-            self._hass.helpers.event.async_track_state_change(
-                "input_text.gpt_input", self.async_generate_openai_response
-            )
-        )
+    # async def async_added_to_hass(self):
+    #     self.async_on_remove(
+    #         self._hass.helpers.event.async_track_state_change(
+    #             "input_text.gpt_input", self.async_generate_openai_response
+    #         )
+    #     )
 
     async def async_update(self):
         pass
