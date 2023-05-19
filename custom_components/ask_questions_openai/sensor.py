@@ -106,7 +106,7 @@ class AskQuestionsOpenAISensor(SensorEntity):
                 "input_question": self._input_question,
                 "output_response": self._output_response}
 
-    def on_question_change(self):
+    def on_input_question_change(self):
         if self._input_question:
             self._state = "querying"
             self._output_response = "Asking GPT..."
