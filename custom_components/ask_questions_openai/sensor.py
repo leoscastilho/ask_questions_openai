@@ -8,6 +8,9 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.core import callback
+import logging
+
+_LOGGER: logging.Logger = logging.getLogger(__package__)
 
 DEFAULT_MODEL = "text-davinci-003"
 CONF_MODEL = "model"
@@ -28,6 +31,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     openai.api_key = api_key
 
     async_add_entities([AskQuestionsOpenAISensor(hass, name, model)], True)
+    _LOGGER.info("HERE1")
 
 def ask_chat_gpt_sync(model,context, question, max_tokens,temperature):
     # Construct the prompt by combining the context and question
@@ -107,6 +111,7 @@ class AskQuestionsOpenAISensor(SensorEntity):
                 "output_response": self._output_response}
 
     def on_input_question_change(self):
+        _LOGGER.info("Detected state change")
         if self._input_question:
             self._state = "querying"
             self._output_response = "Asking GPT..."
