@@ -10,6 +10,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.core import callback
 
 DEFAULT_MODEL = "text-davinci-003"
+CONF_MODEL = "model"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
