@@ -33,7 +33,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 def ask_chat_gpt_sync(model, context, question, max_tokens, temperature):
     # Construct the prompt by combining the context and question
-    prompt = f"Context: {context}\nQuestion: {question}\nAnswer:"
+    if context is not None:
+        prompt = f"{question}"
+    else:
+        prompt = f"Context: {context}\nQuestion: {question}"
 
     try:
         # Generate a response from the ChatGPT model
@@ -105,12 +108,11 @@ class AskQuestionsOpenAISensor(SensorEntity):
 
     async def async_ask_chat_gpt(self, entity_id, old_state, new_state):
         if old_state is not None:
-            _LOGGER.debug("Old State: " + old_state.state)
+            _LOGGER.debug("Old State: " + old_state.input_question)
         if new_state is not None:
-            _LOGGER.debug("New State: " + new_state.state)
+            _LOGGER.debug("New State: " + new_state.input_question)
 
-        new_text = new_state.state
-        if new_text:
+        if old_state.input_question != new_state.input_question:
             response = await self._hass.async_add_executor_job(
                 ask_chat_gpt_sync,
                 self._model,
