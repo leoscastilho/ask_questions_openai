@@ -106,8 +106,7 @@ class AskQuestionsOpenAISensor(SensorEntity):
                 964,
                 0.9
             )
-            _LOGGER.info(response)
-            self._output_response = response["choices"][0]["text"]
+            self._output_response = response
             self._state = "received"
             self.async_write_ha_state()
 
