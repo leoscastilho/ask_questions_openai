@@ -70,8 +70,8 @@ class AskQuestionsOpenAISensor(SensorEntity):
         self._name = name
         self._model = model
         self._state = None
-        self._input_context = None
-        self._input_question = None
+        self._input_context = ""
+        self._input_question = ""
         self._output_response = ""
 
     @property
