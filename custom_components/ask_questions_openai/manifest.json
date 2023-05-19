@@ -2,6 +2,8 @@
     "domain": "ask_questions_openai",
     "name": "Ask Questions OpenAI",
     "documentation": "https://github.com/leoscastilho/ask_questions_openai",
-    "iot_class": "local_push",
-    "version": "0.1.0"
+    "codeowners": ["@leoscastilho"],
+    "dependencies": [],
+    "requirements": ["openai==0.27.0"],
+    "version": "0.1.1"
 }
