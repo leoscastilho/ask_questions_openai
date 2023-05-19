@@ -38,37 +38,22 @@ def ask_chat_gpt_sync(model,context, question, max_tokens,temperature):
     # Construct the prompt by combining the context and question
     prompt = f"Context: {context}\nQuestion: {question}\nAnswer:"
 
-    # Create a function to handle timeouts
-    def timeout_handler(signum, frame):
-        raise TimeoutError("API call timed out.")
+    # Generate a response from the ChatGPT model
+    response = openai.Completion.create(
+        engine=model,
+        prompt=prompt,
+        max_tokens=max_tokens,
+        temperature=temperature,
+        n=1,
+        stop=None
+    )
 
-    # Set the timeout duration (in seconds)
-    timeout_duration = 10
+    # Cancel the timeout if the API call returns within the timeout duration
+    signal.alarm(0)
 
-    # Set up the timeout handler
-    signal.signal(signal.SIGALRM, timeout_handler)
-    signal.alarm(timeout_duration)
-
-    try:
-        # Generate a response from the ChatGPT model
-        response = openai.Completion.create(
-            engine=model,
-            prompt=prompt,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            n=1,
-            stop=None
-        )
-
-        # Cancel the timeout if the API call returns within the timeout duration
-        signal.alarm(0)
-
-        # Extract and return the answer from the response
-        answer = response.choices[0].text.strip()
-        return answer
-
-    except TimeoutError as e:
-        return str(e)
+    # Extract and return the answer from the response
+    answer = response.choices[0].text.strip()
+    return answer
 
 class AskQuestionsOpenAISensor(SensorEntity):
     def __init__(self, hass, name, model):
@@ -111,6 +96,21 @@ class AskQuestionsOpenAISensor(SensorEntity):
                 "input_question": self._input_question,
                 "output_response": self._output_response}
 
+    async def async_ask_chat_gpt(self, entity_id, old_state, new_state):
+        new_text = new_state.state
+        if new_text:
+            response = await self._hass.async_add_executor_job(
+                ask_chat_gpt_sync,
+                self._model,
+                self._input_context,
+                self._input_question,
+                964,
+                0.9
+            )
+            self._output_response = response["choices"][0]["text"]
+            self._state = "received"
+            self.async_write_ha_state()
+
     def on_input_question_change(self):
         _LOGGER.error("Detected state change")
         if self._input_question:
@@ -127,16 +127,16 @@ class AskQuestionsOpenAISensor(SensorEntity):
             self._state = "received"
             self.async_write_ha_state()
         else:
-            logging.WARN("Input is required to query GPT")
+            _LOGGER.error("Input is required to query GPT")
             self._state = "error"
 
 
-    async def async_added_to_hass(self):
-        self.async_on_remove(
-            self._hass.helpers.event.async_track_state_change(
-                "input_text.gpt_input", self.async_generate_openai_response
-            )
-        )
+    # async def async_added_to_hass(self):
+    #     self.async_on_remove(
+    #         self._hass.helpers.event.async_track_state_change(
+    #             "input_text.gpt_input", self.async_generate_openai_response
+    #         )
+    #     )
 
     async def async_update(self):
         pass
