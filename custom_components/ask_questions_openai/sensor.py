@@ -109,8 +109,7 @@ class AskQuestionsOpenAISensor(SensorEntity):
         if self._input_question:
             self._state = "querying"
             self._output_response = "Asking GPT..."
-            gpt_response = await self._hass.async_add_executor_job(
-                ask_chat_gpt_sync,
+            gpt_response = ask_chat_gpt_sync(
                 self._model,
                 self._input_context,
                 self._input_question,
