@@ -10,6 +10,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.core import callback
 import logging
 
+_LOGGER = logging.getLogger(__name__)
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 DEFAULT_MODEL = "text-davinci-003"
@@ -31,7 +32,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     openai.api_key = api_key
 
     async_add_entities([AskQuestionsOpenAISensor(hass, name, model)], True)
-    _LOGGER.info("HERE1")
+    _LOGGER.error("HERE1")
 
 def ask_chat_gpt_sync(model,context, question, max_tokens,temperature):
     # Construct the prompt by combining the context and question
@@ -111,7 +112,7 @@ class AskQuestionsOpenAISensor(SensorEntity):
                 "output_response": self._output_response}
 
     def on_input_question_change(self):
-        _LOGGER.info("Detected state change")
+        _LOGGER.error("Detected state change")
         if self._input_question:
             self._state = "querying"
             self._output_response = "Asking GPT..."
@@ -130,12 +131,12 @@ class AskQuestionsOpenAISensor(SensorEntity):
             self._state = "error"
 
 
-    # async def async_added_to_hass(self):
-    #     self.async_on_remove(
-    #         self._hass.helpers.event.async_track_state_change(
-    #             "input_text.gpt_input", self.async_generate_openai_response
-    #         )
-    #     )
+    async def async_added_to_hass(self):
+        self.async_on_remove(
+            self._hass.helpers.event.async_track_state_change(
+                "input_text.gpt_input", self.async_generate_openai_response
+            )
+        )
 
     async def async_update(self):
         pass
