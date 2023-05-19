@@ -7,6 +7,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_state_change
 from homeassistant.core import callback
 import logging
 
