@@ -24,6 +24,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     api_key = config[CONF_API_KEY]
     name = config[CONF_NAME]
@@ -34,7 +35,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([AskQuestionsOpenAISensor(hass, name, model)], True)
     _LOGGER.error("HERE1")
 
-def ask_chat_gpt_sync(model,context, question, max_tokens,temperature):
+
+def ask_chat_gpt_sync(model, context, question, max_tokens, temperature):
     # Construct the prompt by combining the context and question
     prompt = f"Context: {context}\nQuestion: {question}\nAnswer:"
 
@@ -54,6 +56,7 @@ def ask_chat_gpt_sync(model,context, question, max_tokens,temperature):
     # Extract and return the answer from the response
     answer = response.choices[0].text.strip()
     return answer
+
 
 class AskQuestionsOpenAISensor(SensorEntity):
     def __init__(self, hass, name, model):
@@ -88,7 +91,6 @@ class AskQuestionsOpenAISensor(SensorEntity):
     @property
     def output_response(self):
         return self._output_response
-
 
     @property
     def extra_state_attributes(self):
@@ -130,13 +132,11 @@ class AskQuestionsOpenAISensor(SensorEntity):
             _LOGGER.error("Input is required to query GPT")
             self._state = "error"
 
-
-    # async def async_added_to_hass(self):
-    #     self.async_on_remove(
-    #         self._hass.helpers.event.async_track_state_change(
-    #             "input_text.gpt_input", self.async_generate_openai_response
-    #         )
-    #     )
+    async def async_added_to_hass(self):
+        _LOGGER.error("Added to hass")
+        async_track_state_change(
+            self._hass, self.entity_id, self.async_ask_chat_gpt
+        )
 
     async def async_update(self):
         pass
