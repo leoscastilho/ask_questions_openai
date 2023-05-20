@@ -108,7 +108,7 @@ class AskQuestionsOpenAISensor(SensorEntity):
 
     async def async_ask_chat_gpt(self, entity_id, old_state, new_state):
         if (old_state and new_state and old_state.attributes['input_question'] != new_state.attributes['input_question']) or (not old_state and new_state):
-            if not new_state.attributes['input_questions']:
+            if not new_state.attributes['input_question']:
                 self._state = "missing input"
                 self.async_write_ha_state()
                 pass
