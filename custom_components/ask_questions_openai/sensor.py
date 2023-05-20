@@ -116,12 +116,14 @@ class AskQuestionsOpenAISensor(SensorEntity):
             response = await self._hass.async_add_executor_job(
                 ask_chat_gpt_sync,
                 self._model,
-                new_state.attributes['input_question'],
                 new_state.attributes['input_context'],
+                new_state.attributes['input_question'],
                 964,
                 0.9
             )
             _LOGGER.debug("Response is: " + response)
+            self._input_question = new_state.attributes['input_question']
+            self._input_context = new_state.attributes['input_question']
             self._output_response = response
             if response is None:
                 self._state = "error"
