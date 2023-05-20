@@ -49,13 +49,9 @@ def ask_chat_gpt_sync(model, context, question, max_tokens, temperature):
             stop=None
         )
 
-    except openai.OpenAIError as error:
-        if error.status == 401:
-            _LOGGER.error("Invalid API key.")
-            return None
-        else:
-            _LOGGER.error("An error occurred while making the API request.")
-            return None
+    except openai.OpenAIError:
+        _LOGGER.error("An error occurred while making the API request.")
+        return None
 
     except Exception as e:
         _LOGGER.error("An unexpected error occurred: %s", {str(e)})
@@ -112,6 +108,8 @@ class AskQuestionsOpenAISensor(SensorEntity):
                 self._state = "missing input"
                 self.async_write_ha_state()
                 return
+            self._output_response = "Generating response..."
+            self.async_write_ha_state()
             _LOGGER.debug("Detected change in the input question")
             response = await self._hass.async_add_executor_job(
                 ask_chat_gpt_sync,
@@ -121,7 +119,6 @@ class AskQuestionsOpenAISensor(SensorEntity):
                 964,
                 0.9
             )
-            _LOGGER.debug("Response is: " + response)
             self._input_question = new_state.attributes['input_question']
             self._input_context = new_state.attributes['input_question']
             self._output_response = response
