@@ -111,13 +111,13 @@ class AskQuestionsOpenAISensor(SensorEntity):
             if not new_state.attributes['input_question']:
                 self._state = "missing input"
                 self.async_write_ha_state()
-                pass
+                return
             _LOGGER.debug("Detected change in the input question")
             response = await self._hass.async_add_executor_job(
                 ask_chat_gpt_sync,
                 self._model,
-                self.new_state.attributes['input_question'],
-                self.new_state.attributes['input_context'],
+                new_state.attributes['input_question'],
+                new_state.attributes['input_context'],
                 964,
                 0.9
             )
