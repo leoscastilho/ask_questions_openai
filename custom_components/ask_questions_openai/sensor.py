@@ -107,12 +107,9 @@ class AskQuestionsOpenAISensor(SensorEntity):
                 "output_response": self._output_response}
 
     async def async_ask_chat_gpt(self, entity_id, old_state, new_state):
-        if old_state is not None:
-            _LOGGER.debug("Old State: " + old_state.input_question)
-        if new_state is not None:
-            _LOGGER.debug("New State: " + new_state.input_question)
-
-        if old_state.input_question != new_state.input_question:
+        _LOGGER.debug(type(old_state))
+        _LOGGER.debug(type(new_state))
+        if old_state.state != new_state.state:
             response = await self._hass.async_add_executor_job(
                 ask_chat_gpt_sync,
                 self._model,
