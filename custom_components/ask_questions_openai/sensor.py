@@ -1,5 +1,4 @@
 import openai
-import signal
 import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_API_KEY, CONF_NAME
@@ -33,11 +32,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 def ask_chat_gpt_sync(model, context, question, max_tokens, temperature):
     # Construct the prompt by combining the context and question
-    if context is not None:
+    if context is None:
         prompt = f"{question}"
     else:
         prompt = f"Context: {context}\nQuestion: {question}"
 
+    _LOGGER.debug("Prompt is: " + prompt)
     try:
         # Generate a response from the ChatGPT model
         response = openai.Completion.create(
@@ -107,8 +107,14 @@ class AskQuestionsOpenAISensor(SensorEntity):
                 "output_response": self._output_response}
 
     async def async_ask_chat_gpt(self, entity_id, old_state, new_state):
-        pass
-        if (old_state and new_state and old_state.attributes.get('input_question') != new_state.attributes.get('input_question')) or (not old_state and new_state):
+        _LOGGER.debug(old_state)
+        _LOGGER.debug(old_state.state)
+        _LOGGER.debug(old_state.attributes['input_question'])
+        _LOGGER.debug(new_state)
+        _LOGGER.debug(new_state.state)
+        _LOGGER.debug(new_state.attributes['input_question'])
+        if (old_state and new_state and old_state.attributes['input_question'] != new_state.attributes['input_question']) or (not old_state and new_state):
+            _LOGGER.debug("Detected change in the input question")
             response = await self._hass.async_add_executor_job(
                 ask_chat_gpt_sync,
                 self._model,
@@ -117,7 +123,7 @@ class AskQuestionsOpenAISensor(SensorEntity):
                 964,
                 0.9
             )
-            _LOGGER.debug(response)
+            _LOGGER.debug("Response is: " + response)
             self._output_response = response
             if response is None:
                 self._state = "error"
