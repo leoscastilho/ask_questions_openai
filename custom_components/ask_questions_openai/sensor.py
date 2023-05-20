@@ -107,19 +107,17 @@ class AskQuestionsOpenAISensor(SensorEntity):
                 "output_response": self._output_response}
 
     async def async_ask_chat_gpt(self, entity_id, old_state, new_state):
-        _LOGGER.debug(old_state)
-        _LOGGER.debug(old_state.state)
-        _LOGGER.debug(old_state.attributes['input_question'])
-        _LOGGER.debug(new_state)
-        _LOGGER.debug(new_state.state)
-        _LOGGER.debug(new_state.attributes['input_question'])
         if (old_state and new_state and old_state.attributes['input_question'] != new_state.attributes['input_question']) or (not old_state and new_state):
+            if not new_state.attributes['input_questions']:
+                self._state = "missing input"
+                self.async_write_ha_state()
+                pass
             _LOGGER.debug("Detected change in the input question")
             response = await self._hass.async_add_executor_job(
                 ask_chat_gpt_sync,
                 self._model,
-                self._input_context,
-                self._input_question,
+                self.new_state.attributes['input_question'],
+                self.new_state.attributes['input_context'],
                 964,
                 0.9
             )
