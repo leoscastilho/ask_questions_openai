@@ -1,8 +1,17 @@
 # ask_questions_openai
 HASS Custom Component to Call Open AI's API for Completion
 
-## Requirement
-This sensor requires the Python Script set_state. Copy this file to the path: `HASSCONFIG/python_scripts`
+# Use cases:
+
+## Getting information about a song
+![Get song details](misc/song_details.png)
+
+## Generating a random poem:
+![Generated Poem](misc/generated_poem.png)
+
+
+## Requirements
+This sensor requires the Python Script set_state. Copy [this file](python_scripts/set_state.py) to the path: `HASSCONFIG/python_scripts`
 
 
 ## How to use
