@@ -5,6 +5,7 @@ from homeassistant.const import CONF_API_KEY, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 import logging
+import time
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -30,7 +31,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async_add_entities([AskQuestionsOpenAISensor(hass, name, model)], True)
 
-def ask_chat_gpt_sync(model, context, question, max_tokens, temperature):
+
+def ask_chat_gpt_sync(model, context, question, max_tokens, temperature, num_retries=2):
     # Construct the prompt by combining the context and question
     if context is None:
         prompt = f"{question}"
@@ -38,28 +40,32 @@ def ask_chat_gpt_sync(model, context, question, max_tokens, temperature):
         prompt = f"Context: {context}\nQuestion: {question}"
 
     _LOGGER.debug("Prompt is: " + prompt)
-    try:
-        # Generate a response from the ChatGPT model
-        response = openai.Completion.create(
-            engine=model,
-            prompt=prompt,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            n=1,
-            stop=None
-        )
 
-    except openai.OpenAIError:
-        _LOGGER.error("An error occurred while making the API request.")
-        return None
+    for _ in range(num_retries):
+        try:
+            # Generate a response from the ChatGPT model
+            response = openai.Completion.create(
+                engine=model,
+                prompt=prompt,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                n=1,
+                stop=None
+            )
+            # Extract and return the answer from the response
+            answer = response.choices[0].text.strip()
+            return answer
 
-    except Exception as e:
-        _LOGGER.error("An unexpected error occurred: %s", {str(e)})
-        return None
+        except openai.OpenAIError:
+            _LOGGER.error("An error occurred while making the API request.")
+            time.sleep(1)  # Wait for 1 second before retrying
 
-    # Extract and return the answer from the response
-    answer = response.choices[0].text.strip()
-    return answer
+        except Exception as e:
+            _LOGGER.error("An unexpected error occurred: %s", {str(e)})
+            return None
+
+    _LOGGER.error("Failed to get a response after multiple retries.")
+    return None
 
 
 class AskQuestionsOpenAISensor(SensorEntity):
@@ -122,6 +128,7 @@ class AskQuestionsOpenAISensor(SensorEntity):
             self._output_response = response
             if response is None:
                 self._state = "error"
+                self._output_response = "Could not obtain a response."
             else:
                 self._state = "received"
             self.async_write_ha_state()
